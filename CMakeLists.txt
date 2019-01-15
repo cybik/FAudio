@@ -10,7 +10,7 @@ option(BUILD_TESTS "Build tests/ folder for unit tests to be executed on the hos
 if(WIN32)
 option(BUILD_CPP "Build cpp/ folder (COM wrapper for XAudio2)" OFF)
 endif()
-option(XNASONG "Build with XNA_Song.c" ON)
+option(XNASONG "Build with XNA_Song.c" OFF)
 option(LOG_ASSERTIONS "Bind FAudio_assert to log, instead of platform's assert" OFF)
 option(FORCE_ENABLE_DEBUGCONFIGURATION "Enable DebugConfiguration in all build types" OFF)
 if(WIN32)
@@ -39,7 +39,7 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 # Add our repository's module path to CMake's module path list
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake/modules")
 
 # Platform Flags
 if(APPLE)
@@ -51,45 +51,47 @@ endif()
 
 # Helper function for finding/installing MinGW libs
 if(INSTALL_MINGW_DEPENDENCIES)
-	include(cmake/install_shared_libs.cmake)
+	include(${CMAKE_CURRENT_LIST_DIR}/cmake/install_shared_libs.cmake)
 endif()
 
 # Source lists
-add_library(FAudio SHARED
-	# Public Headers
-	include/F3DAudio.h
-	include/FACT3D.h
-	include/FACT.h
-	include/FAPOBase.h
-	include/FAPOFX.h
-	include/FAPO.h
-	include/FAudioFX.h
-	include/FAudio.h
-	# Internal Headers
-	src/FACT_internal.h
-	src/FAudio_internal.h
-	src/stb.h
-	src/stb_vorbis.h
-	# Source Files
-	src/F3DAudio.c
-	src/FACT3D.c
-	src/FACT.c
-	src/FACT_internal.c
-	src/FAPOBase.c
-	src/FAPOFX.c
-	src/FAPOFX_echo.c
-	src/FAPOFX_eq.c
-	src/FAPOFX_masteringlimiter.c
-	src/FAPOFX_reverb.c
-	src/FAudio.c
-	src/FAudioFX_reverb.c
-	src/FAudioFX_volumemeter.c
-	src/FAudio_internal.c
-	src/FAudio_internal_simd.c
-	src/FAudio_platform_sdl2.c
-	# Optional source files
-	src/XNA_Song.c
-	src/FAudio_ffmpeg.c
+add_library(
+    FAudio
+        SHARED
+            # Public Headers
+            ${CMAKE_CURRENT_LIST_DIR}/include/F3DAudio.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FACT3D.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FACT.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FAPOBase.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FAPOFX.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FAPO.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FAudioFX.h
+            ${CMAKE_CURRENT_LIST_DIR}/include/FAudio.h
+            # Internal Headers
+            ${CMAKE_CURRENT_LIST_DIR}/src/FACT_internal.h
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio_internal.h
+            ${CMAKE_CURRENT_LIST_DIR}/src/stb.h
+            ${CMAKE_CURRENT_LIST_DIR}/src/stb_vorbis.h
+            # Source Files
+            ${CMAKE_CURRENT_LIST_DIR}/src/F3DAudio.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FACT3D.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FACT.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FACT_internal.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOBase.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOFX.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOFX_echo.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOFX_eq.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOFX_masteringlimiter.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAPOFX_reverb.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudioFX_reverb.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudioFX_volumemeter.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio_internal.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio_internal_simd.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio_platform_sdl2.c
+            # Optional source files
+            ${CMAKE_CURRENT_LIST_DIR}/src/XNA_Song.c
+            ${CMAKE_CURRENT_LIST_DIR}/src/FAudio_ffmpeg.c
 )
 
 # Only disable DebugConfiguration in release builds
@@ -104,8 +106,8 @@ endif()
 
 # FAudio folders as includes, for other targets to consume
 target_include_directories(FAudio PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
 )
 
 # MinGW builds should statically link libgcc
@@ -158,7 +160,8 @@ elseif (TARGET SDL2)
 else()
 	message(STATUS "no TARGET SDL2::SDL2, or SDL2, using variables")
 	target_include_directories(FAudio PUBLIC $<BUILD_INTERFACE:${SDL2_INCLUDE_DIRS}>)
-	target_link_libraries(FAudio PUBLIC ${SDL2_LIBRARIES})
+    string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES_TRIMMED)
+	target_link_libraries(FAudio PUBLIC ${SDL2_LIBRARIES_TRIMMED})
 	if(INSTALL_MINGW_DEPENDENCIES)
 		install_shared_libs(bin ${SDL2_LIBRARIES})
 	endif()
@@ -388,8 +391,10 @@ endif()
 
 # Public Headers...
 install(
-	DIRECTORY include/
-	DESTINATION ${FAudio_INSTALL_INCLUDEDIR}
+	DIRECTORY
+        include/
+	DESTINATION
+        ${FAudio_INSTALL_INCLUDEDIR}
 )
 # Libraries...
 install(
@@ -417,3 +422,8 @@ install(
 	NAMESPACE ${PROJECT_NAME}::
 	DESTINATION ${FAudio_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
+
+if(APPLE)
+    include(${CMAKE_CURRENT_LIST_DIR}/Darwin.cmake)
+    RegisterAsFramework(FAudio)
+endif(APPLE)

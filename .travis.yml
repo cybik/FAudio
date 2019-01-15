@@ -1,0 +1,53 @@
+language: cpp
+sudo: false
+git:
+  submodules: false
+notifications:
+  email: root@cybik.moe
+matrix:
+  include:
+    # OSX bare defaults to clang
+    - os: osx
+      osx_image: xcode10.1
+    - os: osx
+      osx_image: xcode10.1
+      env:
+        - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+            - cmake-data
+            - cmake
+            - libsdl2-mixer-dev
+            - libsdl2-dev
+            - libsdl2-mixer-2.0-0
+            - libsdl2-2.0-0
+      env:
+        - MATRIX_EVAL="CC=clang-4.0 && CXX=clang++-4.0"
+    - os: linux
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - g++-7
+            - cmake-data
+            - cmake
+            - libsdl2-mixer-dev
+            - libsdl2-dev
+            - libsdl2-mixer-2.0-0
+            - libsdl2-2.0-0
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+install:
+  - find .
+  - cmake -f CMakeLists.txt
+script:
+  - make -j2

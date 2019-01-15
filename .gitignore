@@ -11,3 +11,6 @@ Release/
 .DS_Store
 xcuserdata/
 *.xcworkspace/
+.idea/
+Makefile
+cmake-build-*/
